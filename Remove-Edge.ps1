@@ -189,7 +189,8 @@ if ($edgeInstalled) {
         "${env:ProgramFiles(x86)}\Microsoft\EdgeUpdate",
         "$env:ProgramFiles\Microsoft\EdgeUpdate",
         "${env:ProgramFiles(x86)}\Microsoft\EdgeCore",
-        "$env:ProgramFiles\Microsoft\EdgeCore"
+        "$env:ProgramFiles\Microsoft\EdgeCore",
+        "${env:ProgramFiles(x86)}\Microsoft\Temp"
     )
 
     foreach ($dir in $dirsToRemove) {
@@ -234,6 +235,74 @@ if ($edgeInstalled) {
             Write-Ok "Removed task: $($task.TaskName)"
         } catch {
             Write-Warn "Could not remove task $($task.TaskName): $_"
+        }
+    }
+    # --- Step 6b: Clean up stale Edge registry entries ---
+
+    Write-Step "Cleaning up Edge registry entries..."
+
+    # Remove Edge client registration (prevents ghost installs blocking reinstalls of other components)
+    $edgeClientKeys = @(
+        "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{56EB18F8-B008-4CBD-B6D2-8C97FE7E9062}",
+        "HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{56EB18F8-B008-4CBD-B6D2-8C97FE7E9062}",
+        "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\ClientState\{56EB18F8-B008-4CBD-B6D2-8C97FE7E9062}",
+        "HKLM:\SOFTWARE\Microsoft\EdgeUpdate\ClientState\{56EB18F8-B008-4CBD-B6D2-8C97FE7E9062}"
+    )
+
+    foreach ($key in $edgeClientKeys) {
+        if (Test-Path $key) {
+            try {
+                Remove-Item -Path $key -Recurse -Force -ErrorAction Stop
+                Write-Ok "Removed $key"
+            } catch {
+                Write-Warn "Could not remove $key : $_"
+            }
+        }
+    }
+
+    # Remove EdgeUpdate registration if no other Edge products remain (keep if WebView2 is still registered)
+    $webview2Key = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+    $edgeUpdatePaths = @(
+        "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate",
+        "HKLM:\SOFTWARE\Microsoft\EdgeUpdate"
+    )
+
+    foreach ($euPath in $edgeUpdatePaths) {
+        $clientsPath = "$euPath\Clients"
+        if (Test-Path $clientsPath) {
+            $remaining = Get-ChildItem $clientsPath -ErrorAction SilentlyContinue
+            if ($remaining.Count -eq 0) {
+                try {
+                    Remove-Item -Path $euPath -Recurse -Force -ErrorAction Stop
+                    Write-Ok "Removed empty EdgeUpdate tree: $euPath"
+                } catch {
+                    Write-Warn "Could not remove $euPath : $_"
+                }
+            } else {
+                Write-Ok "Kept $euPath (other products still registered)"
+            }
+        }
+    }
+
+    # Clean up Edge uninstall entries from Add/Remove Programs
+    $uninstallPaths = @(
+        "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+        "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+    )
+
+    foreach ($uPath in $uninstallPaths) {
+        if (Test-Path $uPath) {
+            Get-ChildItem $uPath -ErrorAction SilentlyContinue | ForEach-Object {
+                $displayName = (Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue).DisplayName
+                if ($displayName -match '^Microsoft Edge$') {
+                    try {
+                        Remove-Item $_.PSPath -Recurse -Force -ErrorAction Stop
+                        Write-Ok "Removed uninstall entry: $displayName"
+                    } catch {
+                        Write-Warn "Could not remove uninstall entry: $_"
+                    }
+                }
+            }
         }
     }
 }

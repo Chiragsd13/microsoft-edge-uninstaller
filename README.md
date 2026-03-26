@@ -13,7 +13,8 @@ Windows makes it nearly impossible to uninstall Edge through normal means — th
 3. **Runs the official uninstaller** via Edge's `setup.exe --force-uninstall`
 4. **Force-removes** Edge directories if the official uninstaller fails (common on Win11 26300+)
 5. **Cleans up** shortcuts (Start Menu, Desktop, Taskbar) and scheduled tasks
-6. **Blocks reinstallation** via registry policies so Windows Update doesn't bring it back
+6. **Cleans up stale registry entries** (EdgeUpdate Clients, ClientState, Add/Remove Programs) so ghost registrations don't block WebView2 or other installs
+7. **Blocks reinstallation** via registry policies so Windows Update doesn't bring it back
 
 ## Usage
 
@@ -70,7 +71,8 @@ On modern Windows 11 (Build 26300+), Microsoft protects Edge from removal at mul
 | 3 | Run `setup.exe --uninstall --system-level --force-uninstall` | Try the official way first |
 | 4 | `Remove-Item -Recurse -Force` on Edge directories | Force removal when official uninstaller fails |
 | 5 | Delete shortcuts + `Unregister-ScheduledTask` | Clean up residual artifacts |
-| 6 | Set `DoNotUpdateToEdgeWithChromium = 1` + EdgeUpdate policies | Prevent Windows Update from reinstalling |
+| 6 | Remove stale Edge registry entries (Clients, ClientState, Uninstall) | Prevent ghost registrations from blocking WebView2 or other installs |
+| 7 | Set `DoNotUpdateToEdgeWithChromium = 1` + EdgeUpdate policies | Prevent Windows Update from reinstalling |
 
 ### Registry Keys Used
 

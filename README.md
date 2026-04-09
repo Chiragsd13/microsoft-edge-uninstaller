@@ -1,10 +1,30 @@
 # Microsoft Edge Uninstaller
 
-A PowerShell tool to completely remove Microsoft Edge from Windows 10/11 and prevent it from being reinstalled via Windows Update.
+![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B%20%7C%207.x-0078D4?style=flat-square&logo=powershell)
+![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=flat-square&logo=windows)
+![License](https://img.shields.io/github/license/Chiragsd13/microsoft-edge-uninstaller?style=flat-square)
+![Stars](https://img.shields.io/github/stars/Chiragsd13/microsoft-edge-uninstaller?style=flat-square)
+
+A PowerShell tool to **completely remove Microsoft Edge** from Windows 10/11 and prevent it from being reinstalled via Windows Update.
+
+## Quick Start
+
+```powershell
+# Run as Administrator:
+irm https://raw.githubusercontent.com/Chiragsd13/microsoft-edge-uninstaller/master/Remove-Edge.ps1 | iex
+```
+
+Or clone and run locally:
+
+```powershell
+git clone https://github.com/Chiragsd13/microsoft-edge-uninstaller
+cd microsoft-edge-uninstaller
+.\Remove-Edge.ps1
+```
 
 ## Why?
 
-Windows makes it nearly impossible to uninstall Edge through normal means — there's no "Uninstall" button in Settings, `winget uninstall` fails with exit code 93, and the built-in setup.exe uninstaller is blocked on recent Windows 11 builds. This tool handles all of that.
+Windows makes it nearly impossible to uninstall Edge through normal means — there's no "Uninstall" button in Settings, `winget uninstall` fails with exit code 93, and the built-in `setup.exe` uninstaller is blocked on recent Windows 11 builds. This tool handles all of that.
 
 ## What It Does
 
@@ -94,3 +114,7 @@ On modern Windows 11 (Build 26300+), Microsoft protects Edge from removal at mul
 
 - Windows 11 Pro Build 26300 (2025)
 - PowerShell 7.x and Windows PowerShell 5.1
+
+## Contributing
+
+PRs welcome. If the script breaks on a new Windows build, open an issue with your build number and the error output.
